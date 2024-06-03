@@ -10,6 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import linregress
 
+#link do danych
 #https://www.kaggle.com/datasets/ahmettyilmazz/fuel-consumption
 df = pd.read_csv('Fuel_Consumption_2000-2022.csv')
 app = Dash(__name__)
@@ -18,7 +19,8 @@ app = Dash(__name__)
 #Zmienić nazwy marek samochodów na jednolitę
 #Zamiana na małe literty wszystkich i tylko pierwsza litera duża
 df['MAKE'] = df['MAKE'].str.upper()
-#Etykietowanie klas auta
+
+#etykietowanie: klas auta, typów paliwa, modeli aut
 df['VEHICLE CLASS LABEL'], _ = pd.factorize(df['VEHICLE CLASS'])
 df['FUEL LABEL'], _ = pd.factorize(df['FUEL'])
 df_make = df['MAKE'].sort_values()
@@ -29,7 +31,7 @@ df_make = pd.DataFrame(df_make, columns=['MAKE'])
 df_make['MAKE LABEL'] = df_make.index
 df_make = df_make[['MAKE LABEL', 'MAKE']]
 
-#
+
 df_unique_class = df[['VEHICLE CLASS LABEL', 'VEHICLE CLASS']].drop_duplicates()
 df_unique_fuel = df[['FUEL LABEL', 'FUEL']].drop_duplicates()
 df_car_model = df[['MAKE', 'MODEL']].drop_duplicates()
@@ -37,6 +39,7 @@ df_car_model['LABEL'] = df_car_model.index
 df_car_model = df_car_model[['LABEL', 'MAKE', 'MODEL']]
 df_make = df_make.drop_duplicates()
 
+# Zastosowanie nowej kolejności kolumn
 new_order = ['YEAR',
              'MAKE',
              'MODEL',
@@ -51,9 +54,11 @@ new_order = ['YEAR',
              'COMB (mpg)',
              'EMISSIONS']
 
-# Zastosowanie nowej kolejności
+
 df = df[new_order]
 
+
+#przygotowane na podstawie: https://dash.plotly.com/tutorial
 # App layout
 app.layout = html.Div([
     html.Div(children='FUEL CONSUMPTION ANALAYSIS', style={'textAlign': 'center', 'color': 'blue', 'fontSize': '26px', 'fontWeight': 'bold', 'margin': '20px 0'}),
@@ -118,7 +123,7 @@ app.layout = html.Div([
     dcc.Graph(figure={}, id='regression-graph'),
     html.Div(id='regression-info', style={'padding': '20px', 'fontSize': '16px'}),
     html.Hr(),
-    #Tabela
+    #Tabele
     html.Div(children='Data set in tables', style={'textAlign': 'center', 'fontSize': '20px', 'volor': 'blue', 'fontWeight': 'bold', 'margin': '20px 0'}),
     html.Hr(),
     html.Div(children='All car makes in data set', style={'textAlign': 'left', 'fontSize': '16px', 'fontWeight': 'bold', 'margin': '20px 0'}), 
@@ -133,7 +138,7 @@ app.layout = html.Div([
     dash_table.DataTable(data=df.to_dict('records'), page_size=50),
 ], style={'padding': '20px', 'fontFamily': 'Arial, sans-serif'})
 
-
+#funkcja do robienia box plot
 @callback(
     Output(component_id='controls-and-graph', component_property='figure'),
     [Input(component_id='controls-and-dropdown-item', component_property='value'),
@@ -152,6 +157,7 @@ def update_graph(y, histfunc, group_by):
     fig.update_xaxes(categoryorder="total descending")
     return fig
 
+#funkcja do robienia wykresów i analizy regresji
 @callback(
     [Output(component_id='regression-graph', component_property='figure'),
      Output(component_id='regression-info', component_property='children')],
@@ -159,13 +165,12 @@ def update_graph(y, histfunc, group_by):
      Input(component_id='regression-y-dropdown', component_property='value')]
 )
 def update_regression_graph(x_col, y_col):
-    # Perform linear regression
+    # Linia regresji
     slope, intercept, r_value, p_value, std_err = linregress(df[x_col], df[y_col])
     
-    # Create regression line
     regression_line = slope * df[x_col] + intercept
     
-    # Create scatter plot
+    # Wykres punktowy - scatter plot
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df[x_col], y=df[y_col], mode='markers', name='Data Points'))
     fig.add_trace(go.Scatter(x=df[x_col], y=regression_line, mode='lines', name='Regression Line'))
@@ -176,7 +181,7 @@ def update_regression_graph(x_col, y_col):
         yaxis_title=y_col
     )
     
-    # Create regression information text
+    # Info o regresji
     regression_equation = f"Equation: y = {slope:.2f}x + {intercept:.2f}"
     r_value_text = f"r = {r_value:.2f}"
     r_squared_text = f"R² = {r_value**2:.2f}"
