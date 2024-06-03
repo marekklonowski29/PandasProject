@@ -15,9 +15,8 @@ from scipy.stats import linregress
 df = pd.read_csv('Fuel_Consumption_2000-2022.csv')
 app = Dash(__name__)
 
-#TO_DO
-#Zmienić nazwy marek samochodów na jednolitę
-#Zamiana na małe literty wszystkich i tylko pierwsza litera duża
+
+#Zamiana wielkości liter
 df['MAKE'] = df['MAKE'].str.upper()
 
 #etykietowanie: klas auta, typów paliwa, modeli aut
